@@ -1,0 +1,48 @@
+
+[project]
+name = "sqlalchemy_orm_ref"
+version = "0.1"
+description = "Boilerplate/reference code for SQLAlchemy 2.0"
+authors = [
+    {name = "None", email = "none@none.com"}
+]
+dependencies = [
+    "stackprinter>=0.2.10",
+    "pydantic[dotenv]>=1.10.7",
+    "msgpack>=1.0.5",
+    "httpx>=0.24.1",
+    "arrow>=1.2.3",
+    "requests>=2.30.0",
+    "requests-cache>=1.0.1",
+    "jupyter>=1.0.0",
+    "sqlalchemy>=2.0.15",
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=7.3.1",
+    "ruff>=0.0.269",
+    "black>=23.3.0",
+]
+
+[tool.pdm.scripts]
+
+## Format scripts
+# Check only, don't fix
+ruff = {cmd = "ruff check ."}
+#  Check and fix
+format = {cmd = "ruff check . --fix"}
+
+## Start scripts
+#  Run main app or script. Launches from app/
+start = { shell = "cd sqlalchemy_orm_ref && pdm run python main.py"}
+
+## Export requirement scripts
+#  Export production requirements
+export = {cmd = "pdm export --prod -o requirements.txt --without-hashes"}
+#  Export only development requirements
+export-dev = {cmd = "pdm export -d -o requirements.dev.txt --without-hashes"}
+## Uncomment if/when using a CI group
+# export-ci = {cmd = "pdm export -G ci -o requirements.ci.txt --without-hashes"}
