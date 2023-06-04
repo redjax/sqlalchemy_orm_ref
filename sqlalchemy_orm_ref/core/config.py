@@ -20,19 +20,19 @@ class AppSettings(BaseSettings):
         env_file = f"{THIS_DIR}/env_files/.env"
 
 
-class APISettings(BaseSettings):
-    BASE_URL: str = Field(default=None, env="BASE_URL")
-    # BASE_TOKEN_URL: str = Field(default=None, env="BASE_TOKEN_URL")
-    # session_token: str = Field(default=None, env="SESSION_TOKEN")
+# class APISettings(BaseSettings):
+#     BASE_URL: str = Field(default=None, env="BASE_URL")
+#     # BASE_TOKEN_URL: str = Field(default=None, env="BASE_TOKEN_URL")
+#     # session_token: str = Field(default=None, env="SESSION_TOKEN")
 
-    class Config:
-        env_file = f"{THIS_DIR}/env_files/api.env"
-        
+#     class Config:
+#         env_file = f"{THIS_DIR}/env_files/api.env"
+
 
 class NotebookSettings(BaseSettings):
     NB_LOG: bool | None = False
     NB_VERBOSE: bool | None = False
-    
+
     class Config:
         env_file = f"{THIS_DIR}/env_files/nb.env"
 
@@ -58,5 +58,5 @@ class LoggingSetting(BaseSettings):
 
 app_settings = AppSettings()
 logging_settings = LoggingSetting()
-api_settings = APISettings()
+# api_settings = APISettings()
 notebook_settings = NotebookSettings()
