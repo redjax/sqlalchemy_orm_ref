@@ -64,7 +64,7 @@ def validate_db_type(in_str: str = None) -> bool:
 
 
 def create_base_metadata(
-    base_obj: sa_orm.DeclarativeBase = None, engine: sa.engine.Engine = None
+    base_obj: sa_orm.DeclarativeBase = None, engine: sa.Engine = None
 ) -> bool:
     """
     Create Base object's metadata.
@@ -102,7 +102,7 @@ def get_engine(
     db_type: str = "sqlite",
     echo: bool = False,
     pool_pre_ping: bool = False,
-) -> sa.engine.Engine:
+) -> sa.Engine:
     """
     Return a SQLAlchemy Engine object.
 
@@ -165,11 +165,11 @@ def get_engine(
 
 
 ## Create a default engine
-default_engine: sa.engine.Engine = get_engine()
+default_engine: sa.Engine = get_engine()
 
 
 def get_session(
-    engine: sa.engine.Engine = None,
+    engine: sa.Engine = None,
     autoflush: bool = False,
     expire_on_commit: bool = False,
     class_=Session,
