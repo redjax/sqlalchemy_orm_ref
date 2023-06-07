@@ -79,6 +79,7 @@ def demo_add_users():
 def demo_select(
     user_names: list[str] = ["spongebob", "sandy"]
 ) -> list[demo_models.User]:
+    ## Build select statement
     statement: sa.sql.Select = sa.select(demo_models.User).where(
         demo_models.User.name.in_(user_names)
     )
@@ -91,8 +92,60 @@ def demo_select(
     return users
 
 
+def demo_select_with_join(
+    name: str = "sandy", email_address: str = "sandy@sqlalchemy.org"
+):
+    ## Build select statement
+    statement: sa.sql.Select = (
+        sa.select(demo_models.Address)
+        .join(demo_models.Address.user)
+        .where(demo_models.User.name == name)
+        .where(demo_models.Address.email_address == email_address)
+    )
+
+    with SessionLocal() as sess:
+        ## Take first/one instance
+        #  Result will be an Address instance
+        _join_select = sess.scalars(statement).one()
+
+    return _join_select
+
+
+def demo_update_email(
+    name: str = "patrick", email_address: str = "patrickstar@sqlalchemy.org"
+):
+    sel_user_stmt: sa.sql.Select = sa.select(demo_models.User).where(
+        demo_models.User.name == name
+    )
+
+    with SessionLocal() as sess:
+        try:
+            user: demo_models.User = sess.scalars(sel_user_stmt).one()
+
+            update_addr: demo_models.Address = demo_models.Address(
+                email_address=email_address
+            )
+
+            if not update_addr in user.addresses:
+                ## Append an address to user
+                user.addresses.append(update_addr)
+
+            else:
+                print(
+                    f"Address '{update_addr.email_address}' already exists on User {name}"
+                )
+        except Exception as exc:
+            raise Exception(
+                f"Unhandled exception updating User address. Details: {exc}"
+            )
+
+
 if __name__ == "__main__":
     add_users = demo_add_users()
     select_users = demo_select()
+    # print(f"Users: {select_users}")
 
-    print(f"Users: {select_users}")
+    select_join = demo_select_with_join()
+    # print(f"Result of select join: {select_join}")
+
+    update_email = demo_update_email()

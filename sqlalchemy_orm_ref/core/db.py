@@ -12,9 +12,9 @@ values to control engine & session behavior.
 
 Currently supported databases:
     - [x] SQLite
-    - [ ] Postgres
+    - [x] Postgres
     - [ ] MySQL
-    - [ ] MSSQL
+    - [x] MSSQL
     - [ ] Azure Cosmos
     
 Be sure to import the Base object from this script and run Base.metadata.create_all(bind=engine)
@@ -31,15 +31,22 @@ from sqlalchemy import orm as sa_orm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+## Import SQLAlchemy exceptions
+from sqlalchemy.exc import OperationalError, DBAPIError
+
 ## Import SQLAlchemy Base object
 from core.database.sqla_base import Base
 
 ## Import database connection classes
-from core.database.sqla_connection_models import saSQLiteConnection
+from core.database.sqla_connection_models import (
+    saSQLiteConnection,
+    saPGConnection,
+    saMSSQLConnection,
+)
 
 
 ## List of valid/supported databases
-valid_db_types: list[str] = ["sqlite"]
+valid_db_types: list[str] = ["sqlite", "postgres", "mssql"]
 
 
 ## Ensure a supported database is used
@@ -56,15 +63,46 @@ def validate_db_type(in_str: str = None) -> bool:
     return True
 
 
+def create_base_metadata(
+    base_obj: sa_orm.DeclarativeBase = None, engine: sa.engine.Engine = None
+) -> bool:
+    """
+    Create Base object's metadata.
+
+    Import this function early in your app/script (i.e. main.py) and run as soon as
+    possible, i.e. after imports.
+
+    This function accepts a SQLAlchemy DeclarativeBase object, and creates the table
+    metadata from that object using the engine passed.
+
+    This function will only ever return True if successful. It does not return False,
+    as an exception is raised if metadata creation fails and the program is halted.
+    """
+
+    try:
+        base_obj.metadata.create_all(bind=engine)
+
+        return True
+    except OperationalError as op_exc:
+        raise op_exc
+    except DBAPIError as dbapi_exc:
+        raise dbapi_exc
+    except Exception as exc:
+        raise Exception(f"Unhandled exception creating Base metadata. Details: {exc}")
+
+
 ## Create a default SQLite connection
-default_conn: saSQLiteConnection = saSQLiteConnection(database="test.sqlite")
+default_sqlite_conn: saSQLiteConnection = saSQLiteConnection(database="test.sqlite")
+# default_pg_conn: saPGConnection = saPGConnection()
+# default_mssql_conn: saMSSQLConnection = saMSSQLConnection()
 
 
 def get_engine(
-    connection: Union[saSQLiteConnection, str] = default_conn,
+    connection: Union[saSQLiteConnection, saPGConnection, str] = default_sqlite_conn,
     db_type: str = "sqlite",
     echo: bool = False,
-) -> sa.Engine:
+    pool_pre_ping: bool = False,
+) -> sa.engine.Engine:
     """
     Return a SQLAlchemy Engine object.
 
@@ -75,9 +113,9 @@ def get_engine(
 
     Currently supported:
         - [x] SQLite
-        - [ ] Postgres
+        - [x] Postgres
         - [ ] MySQL
-        - [ ] MSSQL
+        - [x] MSSQL
         - [ ] Azure Cosmos
     """
     if not connection:
@@ -104,20 +142,34 @@ def get_engine(
         ## Ensure path to database file exists
         connection.ensure_path()
 
+    if db_type == "postgres":
+        pass
+
+    if db_type == "mssql":
+        pass
+
     try:
-        engine = create_engine(connection.connection_string, echo=echo)
+        engine = create_engine(
+            connection.connection_string, echo=echo, pool_pre_ping=pool_pre_ping
+        )
+
+        return engine
+
+    except OperationalError as op_exc:
+        raise OperationalError(
+            f"SQLAlchemy OperationalError exception occurred connecting to database {connection.database}. Details: {op_exc}"
+        )
+
     except Exception as exc:
         raise Exception(f"Unhandled exception creating database engine. Details: {exc}")
-    finally:
-        return engine
 
 
 ## Create a default engine
-default_engine: sa.Engine = get_engine()
+default_engine: sa.engine.Engine = get_engine()
 
 
 def get_session(
-    engine: sa.Engine = None,
+    engine: sa.engine.Engine = None,
     autoflush: bool = False,
     expire_on_commit: bool = False,
     class_=Session,

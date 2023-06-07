@@ -14,10 +14,10 @@ class saConnectionBase:
     """
 
     drivername: str = field(default=None)
+    host: str = field(default=None)
     username: str = field(default=None)
     ## Hide password from __repr__
     password: str = field(default=None, repr=False)
-    host: str = field(default=None)
     port: int = field(default=None)
     database: str = field(default=None)
 
@@ -25,6 +25,7 @@ class saConnectionBase:
     def connection_string(self) -> sa.engine.url.URL:
         _string: sa.engine.url.URL = sa.engine.url.URL.create(
             drivername=self.drivername,
+            host=self.host,
             username=self.username,
             password=self.password,
             port=self.port,
@@ -87,7 +88,7 @@ class saSQLiteConnection(saConnectionBase):
             It is recommended to use .sqlite for the file extension,
             although .db or any other should work fine as well.
 
-    Pass a value for $databasae to change the name of the database file.
+    Pass a value for $database to change the name of the database file.
     If you use a path (i.e. db/test.sqlite), you need to create the Path
     manually.
     """
@@ -119,3 +120,47 @@ class saSQLiteConnection(saConnectionBase):
                 raise Exception(
                     f"Unhandled exception creating directories in path: {str(_path)}. Details: {exc}"
                 )
+
+
+@dataclass
+class saPGConnection(saConnectionBase):
+    """
+    Default Postgres connection. Useful for local testing.
+
+    For Postgres databases, the database you specify must exist before
+    creating the initial connection/engine.
+    """
+
+    drivername: str = field(default="postgresql+psycopg2")
+    username: str = field(default="postgres")
+    ## Hide password from __repr__
+    password: str = field(default="postgres", repr=False)
+    host: str = field(default="127.0.0.1")
+    port: int = field(default=5432)
+    database: str = field(default="postgres")
+
+
+@dataclass
+class saMSSQLConnection(saConnectionBase):
+    drivername: str = field(default="mssql+pyodbc")
+    username: str = field(default="SA")
+    ## Hide password from __repr__
+    password: str = field(default="1Secure*Password1", repr=False)
+    host: str = field(default="127.0.0.1")
+    # instance: str = field(default="\\SQLEXPRESS")
+    port: int = field(default=1433)
+    database: str = field(default="master")
+
+    @property
+    def connection_string(self) -> sa.engine.url.URL:
+        _string: sa.engine.url.URL = sa.engine.url.URL.create(
+            drivername=self.drivername,
+            host=self.host,
+            username=self.username,
+            password=self.password,
+            port=self.port,
+            database=self.database,
+            query=dict(driver="ODBC Driver 17 for SQL Server"),
+        )
+
+        return _string
